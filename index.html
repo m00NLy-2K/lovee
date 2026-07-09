@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Галактика нашей любви</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
@@ -12,12 +12,13 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #020004; /* Ультра-темный космос */
+            background-color: #020004; 
             overflow: hidden;
             font-family: 'Montserrat', sans-serif;
             color: white;
             user-select: none;
-            touch-action: none; /* Чтобы телефон не скроллил страницу при вращении */
+            -webkit-user-select: none; /* Запрет выделения текста на iOS */
+            touch-action: none; 
         }
 
         #canvas {
@@ -34,7 +35,6 @@
             cursor: grabbing;
         }
 
-        /* Контейнер для летающих надписей */
         .text-container {
             position: absolute;
             top: 0;
@@ -42,65 +42,88 @@
             width: 100%;
             height: 100%;
             z-index: 2;
-            pointer-events: none; /* Пропускаем клики мимо кнопок к холсту */
+            pointer-events: none; 
         }
 
+        /* ОПТИМИЗАЦИЯ КНОПОК ПОД ТЕЛЕФОН */
         .floating-text {
             position: absolute;
             pointer-events: auto;
             cursor: pointer;
-            color: #ffb6c1;
+            color: #fff;
             font-size: 13px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px #ff1493, 0 0 20px #ff00ff;
+            letter-spacing: 1px;
+            
+            /* Делаем их похожими на кнопки для удобного тапа */
+            padding: 10px 18px;
+            background: rgba(20, 0, 30, 0.6); 
+            border: 1px solid rgba(255, 20, 147, 0.5);
+            border-radius: 25px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            
+            box-shadow: 0 0 10px rgba(255, 20, 147, 0.3);
+            text-shadow: 0 0 8px #ff1493;
             transition: all 0.3s ease;
             white-space: nowrap;
         }
 
-        .floating-text:hover {
-            color: #fff;
-            transform: scale(1.2) !important;
-            text-shadow: 0 0 20px #fff, 0 0 30px #ff1493;
+        /* Эффект при нажатии/наведении */
+        .floating-text:active, .floating-text:hover {
+            transform: scale(1.1) !important;
+            background: rgba(255, 20, 147, 0.3);
+            box-shadow: 0 0 20px #ff1493;
         }
 
-        /* Координаты и анимация надписей (7 карточек) */
-        .t1 { top: 58%; left: 8%;  animation: floatUI 6s infinite ease-in-out; }
-        .t2 { top: 38%; right: 10%; animation: floatUI 5s infinite ease-in-out 1s; }
-        .t3 { top: 78%; left: 30%; animation: floatUI 7s infinite ease-in-out 2s; }
-        .t4 { top: 24%; left: 15%; animation: floatUI 6s infinite ease-in-out 0.5s; }
-        .t5 { top: 66%; right: 12%; animation: floatUI 5.5s infinite ease-in-out 1.5s; }
-        .t6 { top: 46%; left: 38%; animation: floatUI 6.5s infinite ease-in-out 0.8s; }
-        .t7 { top: 85%; right: 28%; animation: floatUI 5.8s infinite ease-in-out 2.2s; }
+        /* РАССТАНОВКА КНОПОК ДЛЯ УЗКИХ ЭКРАНОВ (iPhone) */
+        .t1 { top: 16%; left: 4%;  animation: floatUI 6s infinite ease-in-out; }
+        .t2 { top: 24%; right: 4%; animation: floatUI 5s infinite ease-in-out 1s; }
+        .t3 { top: 72%; left: 4%; animation: floatUI 7s infinite ease-in-out 2s; }
+        .t4 { top: 80%; right: 4%; animation: floatUI 6s infinite ease-in-out 0.5s; }
+        .t6 { top: 35%; left: 2%; animation: floatUI 6.5s infinite ease-in-out 0.8s; }
+        .t7 { top: 45%; right: 2%; animation: floatUI 5.8s infinite ease-in-out 2.2s; }
+        
+        /* Центральная нижняя кнопка требует особой анимации */
+        .t5 { 
+            bottom: max(10%, env(safe-area-inset-bottom, 10%)); 
+            left: 50%; 
+            transform: translateX(-50%); 
+            animation: floatCenter 5.5s infinite ease-in-out 1.5s; 
+        }
 
         @keyframes floatUI {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
+            50% { transform: translateY(-12px); }
+        }
+        @keyframes floatCenter {
+            0%, 100% { transform: translateX(-50%) translateY(0px); }
+            50% { transform: translateX(-50%) translateY(-12px); }
         }
 
-        /* Заголовок */
+        /* ЗАГОЛОВОК (Учет челки iPhone) */
         .main-title {
             position: absolute;
-            top: 5%;
+            top: max(6%, env(safe-area-inset-top, 6%));
             width: 100%;
             text-align: center;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
-            letter-spacing: 4px;
+            letter-spacing: 3px;
             text-shadow: 0 0 15px #ff1493;
             z-index: 2;
             pointer-events: none;
             animation: pulseText 3s infinite alternate;
         }
 
-        /* Инструкция внизу */
+        /* ИНСТРУКЦИЯ (Учет нижней полоски) */
         .hint {
             position: absolute;
-            bottom: 3%;
+            bottom: max(3%, env(safe-area-inset-bottom, 3%));
             width: 100%;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: rgba(255, 255, 255, 0.4);
             letter-spacing: 1px;
             z-index: 2;
@@ -112,15 +135,16 @@
             100% { opacity: 1; text-shadow: 0 0 25px #ff1493, 0 0 40px #ffb6c1; }
         }
 
-        /* Всплывающее окно (Карточка) */
+        /* МОДАЛЬНОЕ ОКНО */
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 10;
             display: flex;
             justify-content: center;
@@ -137,14 +161,14 @@
 
         .modal-card {
             background: #110515;
-            border: 1px solid rgba(255, 20, 147, 0.3);
-            border-radius: 20px;
+            border: 1px solid rgba(255, 20, 147, 0.4);
+            border-radius: 24px;
             padding: 20px;
-            width: 320px;
-            max-width: 90%;
+            width: 340px;
+            max-width: 85%;
             text-align: center;
-            box-shadow: 0 0 30px rgba(255, 20, 147, 0.5);
-            transform: translateY(50px) scale(0.9);
+            box-shadow: 0 0 40px rgba(255, 20, 147, 0.4);
+            transform: translateY(40px) scale(0.95);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
@@ -152,26 +176,28 @@
             transform: translateY(0) scale(1);
         }
 
+        /* Адаптация картинки/видео внутри карточки */
         .modal-image {
             width: 100%;
-            height: 200px;
-            border-radius: 15px;
+            height: 240px; /* Чуть выше для телефонов */
+            border-radius: 16px;
             object-fit: cover;
             margin-bottom: 15px;
-            box-shadow: 0 0 15px rgba(255, 20, 147, 0.4);
+            box-shadow: 0 0 15px rgba(255, 20, 147, 0.3);
+            background-color: #000; /* Если видео грузится, чтобы не было белого фона */
         }
 
         .modal-title {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: #ffb6c1;
         }
 
         .modal-text {
             font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 25px;
+            line-height: 1.4;
+            margin-bottom: 20px;
             color: #ddd;
         }
 
@@ -179,25 +205,28 @@
             background: rgba(255, 20, 147, 0.2);
             border: 1px solid #ff1493;
             color: white;
-            padding: 10px 25px;
+            padding: 12px 30px;
             border-radius: 30px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             text-transform: uppercase;
             transition: 0.3s;
+            width: 100%; /* Широкая кнопка для удобства */
+            box-sizing: border-box;
         }
 
-        .close-btn:hover {
+        .close-btn:active {
             background: #ff1493;
             box-shadow: 0 0 15px #ff1493;
+            transform: scale(0.95);
         }
     </style>
 </head>
 <body>
 
     <div class="main-title">Галактика нашей любви ❤️</div>
-    <div class="hint">Покрути галактику пальцем или мышкой ✨</div>
+    <div class="hint">Покрути галактику пальцем ✨</div>
 
     <canvas id="canvas"></canvas>
 
@@ -221,16 +250,7 @@
     </div>
 
     <script>
-        // ============================================================
-        // --- ДАННЫЕ ДЛЯ КАРТОЧЕК: РЕДАКТИРУЙТЕ ТОЛЬКО ЭТОТ БЛОК ---
-        // Каждый объект = одна карточка (в том же порядке, что t1..t7 выше)
-        //   title  — заголовок карточки
-        //   text   — короткое послание (1-3 предложения)
-        //   image  — ссылка на фото/гифку ИЛИ ВИДЕО. Можно:
-        //            а) вставить прямую ссылку на картинку в интернете
-        //            б) положить файл фото рядом с этим index.html (например "photo1.jpg")
-        //            в) положить ВИДЕО рядом (например "video.mp4") - код сам его запустит!
-        // ============================================================
+        // === ВАШИ ДАННЫЕ ===
         const cardsData = [
             {
                 title: "Моя вселенная",
@@ -239,37 +259,37 @@
             },
             {
                 title: "Навсегда вместе",
-                text: "Каждый миг рядом с тобой — это магия. Спасибо, что ты есть у меня.",
+                text: "Каждый момент рядом с тобой это мечта. Спасибо, что ты есть у меня",
                 image: "life1.jpg" 
             },
             {
                 title: "Мое счастье",
-                text: "Ты делаешь меня самым счастливым человеком в этой вселенной. С нашей годовщиной!",
+                text: "Ты делаешь меня самым счастливым человеком в этой вселенной. С нашим праздником!",
                 image: "life2.jpg" 
             },
             {
                 title: "С годовщиной!",
-                text: "Столько всего пройдено, а впереди еще целая вечность. Я всегда буду рядом.",
+                text: "Столько всего пройдено, а впереди еще целая вечность. Я всегда буду рядом",
                 image: "life3.jpg" 
             },
             {
                 title: "Любовь всей жизни",
-                text: "Нет слов, чтобы описать, как сильно я тебя люблю. Мой лучший друг и моя душа.",
+                text: "Нет слов, чтобы описать, как сильно я тебя люблю",
                 image: "love2.mp4" 
             },
             {
                 title: "Наш путь",
-                text: "Сколько бы дорог мы ни прошли, я рад, что каждая из них вела меня к тебе.",
+                text: "Сколько бы дорог мы ни прошли, я рад, что каждая из них вела меня к тебе",
                 image: "life4.jpg" 
             },
             {
                 title: "Ты моё всё",
-                text: "Ты не просто часть моей жизни — ты то, ради чего она имеет смысл.",
+                text: "Ты не просто моя жизнь и вселенная ты та, ради которой я хочу жить",
                 image: "life5.jpg" 
             }
         ];
 
-        // --- ЛОГИКА ВСПЛЫВАЮЩИХ ОКОН (УМНЫЙ МЕДИА-КОНТЕЙНЕР) ---
+        // === ВСПЛЫВАЮЩИЕ ОКНА ===
         const modal = document.getElementById('modalOverlay');
         const mediaContainer = document.getElementById('mediaContainer');
         const mTitle = document.getElementById('mTitle');
@@ -279,8 +299,9 @@
             const data = cardsData[index];
             const fileUrl = data.image.toLowerCase();
             
-            // Теперь код понимает форматы .mp4, .mov и .webm
+            // Расширенная проверка для айфонов (mp4, mov, webm)
             if (fileUrl.includes('.mp4') || fileUrl.includes('.mov') || fileUrl.includes('.webm')) {
+                // playsinline обязательно для iPhone, чтобы видео не открывалось на весь экран
                 mediaContainer.innerHTML = `<video src="${data.image}" class="modal-image" autoplay loop muted playsinline></video>`;
             } else {
                 mediaContainer.innerHTML = `<img src="${data.image}" class="modal-image" alt="love" onerror="this.style.display='none'">`;
@@ -298,17 +319,14 @@
             modal.classList.remove('active');
         }
 
-
-        // --- НАСТОЯЩИЙ 3D ДВИЖОК ГАЛАКТИКИ ---
+        // === 3D ДВИЖОК ===
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let w, h, cx, cy;
 
-        // Переменные вращения камеры (управляются мышкой/пальцем)
-        let pitch = 1.0; // Наклон вперед/назад (ось X)
-        let yaw = 0;     // Вращение влево/вправо (ось Y)
-        let autoYaw = 0; // Автоматическое вращение
-
+        let pitch = 1.0; 
+        let yaw = 0;     
+        let autoYaw = 0; 
         let isDragging = false;
         let lastX, lastY;
 
@@ -316,31 +334,26 @@
             w = canvas.width = window.innerWidth;
             h = canvas.height = window.innerHeight;
             cx = w / 2;
-            cy = h / 2 + 50; 
+            cy = h / 2 + 30; // Чуть поднял центр для телефонов
         }
         window.addEventListener('resize', initCanvas);
         initCanvas();
 
-        // 3D Математика: функция поворота координат
         function rotate3D(x, y, z, pPitch, pYaw) {
             let y1 = y * Math.cos(pPitch) - z * Math.sin(pPitch);
             let z1 = y * Math.sin(pPitch) + z * Math.cos(pPitch);
-            
             let x2 = x * Math.cos(pYaw) - z1 * Math.sin(pYaw);
             let z2 = x * Math.sin(pYaw) + z1 * Math.cos(pYaw);
-            
             return { x: x2, y: y1, z: z2 };
         }
 
-        // Генерация галактики
         const galaxy = [];
-        const numStars = 4000; 
+        const numStars = w > 800 ? 4000 : 2500; // На телефоне чуть меньше частиц для плавности (FPS)
         const maxRadius = w > 800 ? 600 : 350;
         const colors = ['#ff1493', '#ff00ff', '#ff69b4', '#ffffff', '#8a2be2'];
 
         for(let i = 0; i < numStars; i++) {
             let radius = Math.pow(Math.random(), 2) * maxRadius; 
-            
             let numArms = 3;
             let armOffset = (Math.random() * 0.4 - 0.2); 
             let angle = (radius * 0.015) + (Math.floor(Math.random() * numArms) * ((Math.PI * 2) / numArms)) + armOffset;
@@ -357,12 +370,11 @@
             });
         }
 
-        // Генерация 3D Сердца
         const heartParticles = [];
         for (let t = 0; t < Math.PI * 2; t += 0.05) {
             let hx = 16 * Math.pow(Math.sin(t), 3);
             let hy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-            let scale = w > 800 ? 10 : 7;
+            let scale = w > 800 ? 10 : 7; // На телефоне сердце компактнее
             
             for(let j = 0; j < 3; j++) {
                 heartParticles.push({
@@ -377,65 +389,46 @@
 
         let beamParticles = [];
 
-        // Главный цикл анимации
         function animate() {
             ctx.fillStyle = 'rgba(2, 0, 4, 0.4)';
             ctx.fillRect(0, 0, w, h);
 
             autoYaw += 0.001; 
             let currentYaw = yaw + autoYaw;
-
             let renderList = [];
 
-            // 1. Считаем позицию звезд галактики
             galaxy.forEach(p => {
                 let pos = rotate3D(p.x, p.y, p.z, pitch, currentYaw);
                 let zScale = 1000 / (1000 + pos.z);
-                if (zScale > 0) {
-                    renderList.push({ pos, zScale, color: p.color, size: p.size, type: 'star' });
-                }
+                if (zScale > 0) renderList.push({ pos, zScale, color: p.color, size: p.size, type: 'star' });
             });
 
-            // 2. Черная дыра (центр)
             let bhPos = rotate3D(0, 0, 0, pitch, currentYaw);
             renderList.push({ pos: bhPos, zScale: 1000/(1000+bhPos.z), type: 'blackhole' });
 
-            // 3. Сердце 
             heartParticles.forEach(p => {
                 let pos = rotate3D(p.x, p.y, p.z, pitch, 0); 
                 let zScale = 1000 / (1000 + pos.z);
-                if (zScale > 0) {
-                    renderList.push({ pos, zScale, color: p.color, size: p.size, type: 'heart' });
-                }
+                if (zScale > 0) renderList.push({ pos, zScale, color: p.color, size: p.size, type: 'heart' });
             });
 
-            // Луч от центра к сердцу
             if(Math.random() > 0.5) {
                 beamParticles.push({
-                    x: (Math.random() - 0.5) * 15,
-                    y: 0,
-                    z: (Math.random() - 0.5) * 15,
-                    speedY: -Math.random() * 4 - 2,
-                    life: 1
+                    x: (Math.random() - 0.5) * 15, y: 0, z: (Math.random() - 0.5) * 15,
+                    speedY: -Math.random() * 4 - 2, life: 1
                 });
             }
             for (let i = beamParticles.length - 1; i >= 0; i--) {
                 let p = beamParticles[i];
-                p.y += p.speedY;
-                p.life -= 0.015;
-                if (p.life <= 0) {
-                    beamParticles.splice(i, 1);
-                    continue;
-                }
+                p.y += p.speedY; p.life -= 0.015;
+                if (p.life <= 0) { beamParticles.splice(i, 1); continue; }
                 let pos = rotate3D(p.x, p.y, p.z, pitch, 0);
                 let zScale = 1000 / (1000 + pos.z);
                 renderList.push({ pos, zScale, color: `rgba(255, 20, 147, ${p.life})`, size: 2, type: 'beam' });
             }
 
-            // СОРТИРУЕМ ВСЕ ЭЛЕМЕНТЫ ОТ ДАЛЬНИХ К БЛИЖНИМ 
             renderList.sort((a, b) => b.pos.z - a.pos.z);
 
-            // ОТРИСОВКА
             renderList.forEach(item => {
                 let sx = cx + item.pos.x * item.zScale;
                 let sy = cy + item.pos.y * item.zScale;
@@ -446,21 +439,14 @@
                     let radiusY = 40 * item.zScale * Math.cos(pitch); 
                     ctx.ellipse(sx, sy, Math.abs(radiusX), Math.abs(radiusY), 0, 0, Math.PI*2);
                     ctx.fillStyle = 'black';
-                    ctx.shadowBlur = 30;
-                    ctx.shadowColor = '#ff1493';
-                    ctx.fill();
-                    ctx.shadowBlur = 0; 
+                    ctx.shadowBlur = 30; ctx.shadowColor = '#ff1493';
+                    ctx.fill(); ctx.shadowBlur = 0; 
                 } else {
                     ctx.beginPath();
                     ctx.arc(sx, sy, item.size * item.zScale, 0, Math.PI * 2);
                     ctx.fillStyle = item.color;
-                    
-                    if(item.type === 'heart') {
-                        ctx.shadowBlur = 10;
-                        ctx.shadowColor = '#ff1493';
-                    }
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
+                    if(item.type === 'heart') { ctx.shadowBlur = 10; ctx.shadowColor = '#ff1493'; }
+                    ctx.fill(); ctx.shadowBlur = 0;
                 }
             });
 
@@ -469,15 +455,13 @@
 
         animate();
 
-        // --- УПРАВЛЕНИЕ МЫШКОЙ И КАСАНИЯМИ ---
-        
+        // === ТАЧ И МЫШЬ ===
         function startDrag(e) {
             if(e.target.closest('.floating-text') || e.target.closest('.modal-overlay')) return;
             isDragging = true;
             let clientX = e.touches ? e.touches[0].clientX : e.clientX;
             let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            lastX = clientX;
-            lastY = clientY;
+            lastX = clientX; lastY = clientY;
         }
 
         function drag(e) {
@@ -485,26 +469,20 @@
             let clientX = e.touches ? e.touches[0].clientX : e.clientX;
             let clientY = e.touches ? e.touches[0].clientY : e.clientY;
             
-            let dx = clientX - lastX;
-            let dy = clientY - lastY;
-            
-            yaw -= dx * 0.005; 
-            pitch -= dy * 0.005; 
-            
+            yaw -= (clientX - lastX) * 0.005; 
+            pitch -= (clientY - lastY) * 0.005; 
             pitch = Math.max(0.1, Math.min(Math.PI / 2.2, pitch));
             
-            lastX = clientX;
-            lastY = clientY;
+            lastX = clientX; lastY = clientY;
         }
 
-        function endDrag() {
-            isDragging = false;
-        }
+        function endDrag() { isDragging = false; }
 
         document.addEventListener('mousedown', startDrag);
         document.addEventListener('mousemove', drag);
         document.addEventListener('mouseup', endDrag);
 
+        // {passive: false} обязательно для iOS, чтобы предотвратить скролл
         document.addEventListener('touchstart', startDrag, {passive: false});
         document.addEventListener('touchmove', drag, {passive: false});
         document.addEventListener('touchend', endDrag);
